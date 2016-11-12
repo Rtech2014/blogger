@@ -1,5 +1,7 @@
 from google.appengine.ext import ndb
 
+# Post Database model
+
 
 class Post(ndb.Model):
     post_title = ndb.StringProperty(required=True)
@@ -37,6 +39,8 @@ class Post(ndb.Model):
             return True
         else:
             return False
+
+# User database model
 
 
 class User(ndb.Model):
@@ -105,6 +109,8 @@ class LikePost(ndb.Model):
             return True
         else:
             return False
+
+# Comment Database model
 
 
 class Comment(ndb.Model):
