@@ -1,0 +1,25 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    position: relative;
+    min-height: 100%;
+}
+body {
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
+}
+
+.container .text-muted {
+    margin: 20px 0;
+}
+
+.post-title
+{
+    margin-bottom: 0 !important;
+}
+.post-hr
+{
+    margin-top: 5px !important;
+    color: black;
+}
+
