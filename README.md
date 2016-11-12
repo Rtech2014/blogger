@@ -1,4 +1,4 @@
-#Udacity Blogger Application
+Udacity Blogger Application
 
 Blog: https://blogger-149307.appspot.com/
 
