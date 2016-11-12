@@ -3,7 +3,7 @@ import hashlib
 import hmac
 import os
 import re
-import database
+import db_model
 import jinja2
 import webapp2
 
@@ -84,12 +84,12 @@ class MainHandler(webapp2.RequestHandler):
     def initialize(self, *a, **kw):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
-        self.user = uid and database.User.get_user_by_id(uid)
+        self.user = uid and db_model.User.get_user_by_id(uid)
 
 
 class MainPage(MainHandler):
     def get(self):
-        posts = database.Post.query()
+        posts = db_model.Post.query()
         self.render('index.html', posts=posts)
 
 # Account Page
@@ -110,11 +110,11 @@ class LoginPage(MainHandler):
         name = self.request.get('username')
         password = self.request.get('password')
         password_hash = hash_password(password, name)
-        user = database.User.get_user_by_name_and_password(
+        user = db_model.User.get_user_by_name_and_password(
             name, password_hash)
         if user:
             self.set_secure_cookie('user_id', str(
-                database.User.get_user_id(user)))
+                db_model.User.get_user_id(user)))
             self.redirect('/')
         else:
             msg = 'Invalid login'
@@ -135,14 +135,14 @@ class RegisterPage(MainHandler):
         if valid_username(name):
             if valid_password(password):
                 if password == verify:
-                    user = database.User.get_user_by_name(name)
+                    user = db_model.User.get_user_by_name(name)
                     if user:
                         if user.user_name == name:
                             msg = "The username already exisits."
                             self.render('register.html', error=msg)
                     else:
                         password_hash = hash_password(password, name)
-                        user_id = database.User.add_user(name, password_hash)
+                        user_id = db_model.User.add_user(name, password_hash)
                         self.set_secure_cookie('user_id', str(user_id))
                         self.redirect('/')
                 else:
@@ -166,14 +166,14 @@ class LogoutPage(MainHandler):
 
 class PostPage(MainHandler):
     def get(self, post_id):
-        post = database.Post.get_post(int(post_id))
+        post = db_model.Post.get_post(int(post_id))
         if not post:
             return self.error()
-        comments = database.Comment.get_comments_by_post_id(post_id)
+        comments = db_model.Comment.get_comments_by_post_id(post_id)
         like_text = 'Like'
         if self.user:
             user = self.user
-            like = database.LikePost.get_like_by_post_and_author(post_id, user.user_name)
+            like = db_model.LikePost.get_like_by_post_and_author(post_id, user.user_name)
             if like:
                 like_text = 'Liked'
         self.render("viewpost.html", post=post, comments=comments, like=like_text)
@@ -197,7 +197,7 @@ class AddPostPage(MainHandler):
         title = self.request.get('title')
         content = self.request.get('content')
         author = user.user_name
-        post_id = database.Post.add_post(title=title,
+        post_id = db_model.Post.add_post(title=title,
                                          content=content,
                                          author=author)
         self.redirect('/post/' + str(post_id))
@@ -207,7 +207,7 @@ class AddPostPage(MainHandler):
 
 class EditPostPage(MainHandler):
     def get(self, post_id):
-        post = database.Post.get_post(int(post_id))
+        post = db_model.Post.get_post(int(post_id))
         if not post:
             self.error()
             return
@@ -222,7 +222,7 @@ class EditPostPage(MainHandler):
         content = self.request.get('content')
         # post_id = self.request.get('post_id')
         author = user.user_name
-        database.Post.edit_post(title=title,
+        db_model.Post.edit_post(title=title,
                                 content=content,
                                 author=author,
                                 post_id=post_id)
@@ -241,10 +241,10 @@ class DeletePost(MainHandler):
 
         user = self.user
         post_id = self.request.get('postid')
-        post = database.Post.get_post(post_id)
+        post = db_model.Post.get_post(post_id)
 
         if post.post_author == user.user_name:
-            success = database.Post.delete_post(int(post_id))
+            success = db_model.Post.delete_post(int(post_id))
             if success:
                 self.render('index.html')
                 self.redirect('/')
@@ -264,7 +264,7 @@ class AddComment(MainHandler):
         post_id = self.request.get('post_id')
         content = self.request.get('content')
         if post_id and content:
-            database.Comment.add_comment(post_id=post_id, text=content, author=user.user_name)
+            db_model.Comment.add_comment(post_id=post_id, text=content, author=user.user_name)
             return self.redirect('/post/' + post_id)
         else:
             return self.error()
@@ -281,7 +281,7 @@ class EditComment(MainHandler):
         post_id = self.request.get('post_id')
         content = self.request.get('content')
         if post_id and content:
-            database.Comment.add_comment(post_id=post_id, text=content, author=user.user_name)
+            db_model.Comment.add_comment(post_id=post_id, text=content, author=user.user_name)
             return self.redirect('/post/' + post_id)
         else:
             return self.error()
@@ -299,10 +299,10 @@ class DeleteComment(MainHandler):
 
         user = self.user
         comment_id = self.request.get('comment_id')
-        comment = database.Comment.get_comment(comment_id)
+        comment = db_model.Comment.get_comment(comment_id)
 
         if comment.comment_author == user.user_name:
-            success = database.Comment.delete_comment(int(comment_id))
+            success = db_model.Comment.delete_comment(int(comment_id))
             if success:
                 return self.redirect('/')
         else:
@@ -316,22 +316,22 @@ class AddLike(MainHandler):
             return self.redirect('/')
 
         user = self.user
-        post = database.Post.get_post(post_id)
+        post = db_model.Post.get_post(post_id)
         if not post:
             return self.redirect('/')
-        like = database.LikePost.get_like_by_post_and_author(post_id, user.user_name)
+        like = db_model.LikePost.get_like_by_post_and_author(post_id, user.user_name)
         if like:
-            database.LikePost.delete_like(like.key.id())
+            db_model.LikePost.delete_like(like.key.id())
         else:
             if post.post_author == user.user_name:
                 return self.redirect('/')
             else:
-                database.LikePost.add_like(post_id, user.user_name)
+                db_model.LikePost.add_like(post_id, user.user_name)
 
         return self.redirect('/post/' + post_id)
 
         if post_id and content:
-            database.Comment.add_comment(post_id=post_id, text=content, author=user.user_name)
+            db_model.Comment.add_comment(post_id=post_id, text=content, author=user.user_name)
             return self.redirect('/post/' + post_id)
         else:
             return self.error()
@@ -347,10 +347,10 @@ class DeleteLike(MainHandler):
 
         user = self.user
         post_id = self.request.get('postid')
-        post = database.Post.get_post(post_id)
+        post = db_model.Post.get_post(post_id)
 
         if post.post_author == user.user_name:
-            success = database.Post.delete_post(int(post_id))
+            success = db_model.Post.delete_post(int(post_id))
             if success:
                 self.render('index.html')
                 self.redirect('/')

@@ -1,11 +1,11 @@
-/* Sticky footer styles
--------------------------------------------------- */
+
 html {
     position: relative;
     min-height: 100%;
 }
 body {
     /* Margin bottom by footer height */
+    background-color: blanchedalmond;
     margin-bottom: 60px;
 }
 
